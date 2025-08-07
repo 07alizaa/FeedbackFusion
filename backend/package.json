@@ -1,0 +1,42 @@
+{
+  "name": "feedbackfusion-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "server": "node server.js",
+    "init-db": "node scripts/initDatabase.js",
+    "test-setup": "node scripts/testSetup.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "natural": "^8.1.0",
+    "nodemailer": "^7.0.5",
+    "openai": "^5.11.0",
+    "pg": "^8.16.3",
+    "qrcode": "^1.5.4",
+    "sentiment": "^5.0.2",
+    "socket.io": "^4.8.1",
+    "stripe": "^18.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

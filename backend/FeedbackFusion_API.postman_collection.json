@@ -1,0 +1,634 @@
+{
+  "info": {
+    "name": "FeedbackFusion API",
+    "description": "Complete API collection for FeedbackFusion backend testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "formId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "entryId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Vendor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.json().data && pm.response.json().data.token) {",
+                  "    pm.globals.set('token', pm.response.json().data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Vendor\",\n  \"email\": \"vendor@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"vendor\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Register Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.json().data && pm.response.json().data.token) {",
+                  "    pm.globals.set('token', pm.response.json().data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@feedbackfusion.com\",\n  \"password\": \"adminpassword123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.json().data && pm.response.json().data.token) {",
+                  "    pm.globals.set('token', pm.response.json().data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendor@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forms Management",
+      "item": [
+        {
+          "name": "Create Form - Comprehensive",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.json().data && pm.response.json().data.form && pm.response.json().data.form.id) {",
+                  "    pm.globals.set('formId', pm.response.json().data.form.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Customer Satisfaction Survey\",\n  \"config\": {\n    \"fields\": [\n      {\n        \"type\": \"text\",\n        \"name\": \"customerName\",\n        \"label\": \"Your Name (Optional)\",\n        \"required\": false,\n        \"placeholder\": \"Enter your name\"\n      },\n      {\n        \"type\": \"email\",\n        \"name\": \"email\",\n        \"label\": \"Email (Optional)\",\n        \"required\": false,\n        \"placeholder\": \"your@email.com\"\n      },\n      {\n        \"type\": \"radio\",\n        \"name\": \"satisfaction\",\n        \"label\": \"How satisfied are you with our service?\",\n        \"required\": true,\n        \"options\": [\n          { \"value\": \"very-satisfied\", \"label\": \"Very Satisfied\" },\n          { \"value\": \"satisfied\", \"label\": \"Satisfied\" },\n          { \"value\": \"neutral\", \"label\": \"Neutral\" },\n          { \"value\": \"dissatisfied\", \"label\": \"Dissatisfied\" },\n          { \"value\": \"very-dissatisfied\", \"label\": \"Very Dissatisfied\" }\n        ]\n      },\n      {\n        \"type\": \"textarea\",\n        \"name\": \"feedback\",\n        \"label\": \"Please share your detailed feedback\",\n        \"required\": true,\n        \"placeholder\": \"Tell us about your experience...\",\n        \"rows\": 4\n      },\n      {\n        \"type\": \"checkbox\",\n        \"name\": \"features\",\n        \"label\": \"Which features did you use?\",\n        \"required\": false,\n        \"options\": [\n          { \"value\": \"support\", \"label\": \"Customer Support\" },\n          { \"value\": \"product\", \"label\": \"Product Features\" },\n          { \"value\": \"billing\", \"label\": \"Billing & Payments\" },\n          { \"value\": \"onboarding\", \"label\": \"Onboarding Process\" }\n        ]\n      }\n    ],\n    \"settings\": {\n      \"allowAnonymous\": true,\n      \"requireContact\": false,\n      \"thankYouMessage\": \"Thank you for your feedback!\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms"]
+            }
+          }
+        },
+        {
+          "name": "Create Form - Simple",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Quick Feedback Form\",\n  \"config\": {\n    \"fields\": [\n      {\n        \"type\": \"textarea\",\n        \"name\": \"feedback\",\n        \"label\": \"Your feedback\",\n        \"required\": true,\n        \"placeholder\": \"Share your thoughts...\"\n      },\n      {\n        \"type\": \"radio\",\n        \"name\": \"rating\",\n        \"label\": \"Overall Rating\",\n        \"required\": true,\n        \"options\": [\n          { \"value\": \"5\", \"label\": \"Excellent (5)\" },\n          { \"value\": \"4\", \"label\": \"Good (4)\" },\n          { \"value\": \"3\", \"label\": \"Average (3)\" },\n          { \"value\": \"2\", \"label\": \"Poor (2)\" },\n          { \"value\": \"1\", \"label\": \"Terrible (1)\" }\n        ]\n      }\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms"]
+            }
+          }
+        },
+        {
+          "name": "Get Form Details (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Vendor Forms",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/vendor/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "vendor", "my"]
+            }
+          }
+        },
+        {
+          "name": "Update Form",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Customer Satisfaction Survey\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Form Entries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/entries?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "entries"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Form Entries - Flagged Only",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/entries?flagged=true&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "entries"],
+              "query": [
+                {
+                  "key": "flagged",
+                  "value": "true"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Form",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feedback Submission",
+      "item": [
+        {
+          "name": "Submit Feedback - With Contact",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.json().data && pm.response.json().data.entryId) {",
+                  "    pm.globals.set('entryId', pm.response.json().data.entryId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"customerName\": \"Jane Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"satisfaction\": \"very-satisfied\",\n    \"feedback\": \"Absolutely fantastic service! The team was responsive, helpful, and went above and beyond to solve my issues. The product works flawlessly and the user interface is intuitive. I would definitely recommend this to others and look forward to continued collaboration.\",\n    \"features\": [\"support\", \"product\", \"onboarding\"]\n  },\n  \"wantsToBeContacted\": true,\n  \"contactDetails\": {\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"phone\": \"+1-555-0123\",\n    \"preferredContact\": \"email\",\n    \"bestTime\": \"business hours\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Submit Feedback - Anonymous",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"satisfaction\": \"satisfied\",\n    \"feedback\": \"Good service overall. The response time could be improved, but the quality of support is excellent. Keep up the good work!\",\n    \"features\": [\"support\"]\n  },\n  \"wantsToBeContacted\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Submit Feedback - Negative",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"satisfaction\": \"dissatisfied\",\n    \"feedback\": \"The service was slow and unresponsive. Had to wait too long for support. The interface is confusing and needs improvement. Not satisfied with the overall experience.\",\n    \"features\": [\"support\"]\n  },\n  \"wantsToBeContacted\": true,\n  \"contactDetails\": {\n    \"email\": \"unsatisfied@example.com\",\n    \"name\": \"Unhappy Customer\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Submit Feedback - High Quality Constructive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"satisfaction\": \"neutral\",\n    \"feedback\": \"The core functionality works well, but I have several suggestions for improvement. First, the user interface could be more intuitive - consider adding tooltips and better navigation. Second, the response time for customer support could be faster. Third, it would be great to have more integration options with third-party tools. Overall, it's a solid product with room for enhancement. I appreciate the effort put into the product and would be happy to provide more detailed feedback if needed.\",\n    \"features\": [\"product\", \"support\"]\n  },\n  \"wantsToBeContacted\": true,\n  \"contactDetails\": {\n    \"name\": \"John Developer\",\n    \"email\": \"john.dev@techcompany.com\",\n    \"phone\": \"+1-555-0199\",\n    \"preferredContact\": \"email\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "submit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feedback Analytics",
+      "item": [
+        {
+          "name": "Get Feedback Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Specific Feedback Entry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/feedback/{{entryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "feedback", "{{entryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Flag Feedback Entry",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isFlagged\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/feedback/{{entryId}}/flag",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "feedback", "{{entryId}}", "flag"]
+            }
+          }
+        },
+        {
+          "name": "Unflag Feedback Entry",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isFlagged\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/feedback/{{entryId}}/flag",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "feedback", "{{entryId}}", "flag"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Invalid Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wrong@email.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Unauthorized Access",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/vendor/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "vendor", "my"]
+            }
+          }
+        },
+        {
+          "name": "Invalid Form ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "999999"]
+            }
+          }
+        },
+        {
+          "name": "Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{formId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{formId}}", "submit"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
