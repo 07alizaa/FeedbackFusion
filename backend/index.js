@@ -4,6 +4,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { Pool } = require('pg');
 
+// Load environment variables
+require('dotenv').config();
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const formRoutes = require('./routes/formRoutes');
@@ -19,11 +22,11 @@ const notificationRoutes = require('./routes/notification');
 
 // Database connection
 const pool = new Pool({
-  user: 'saishtiwari',
-  host: 'localhost',
-  database: 'feedbackfusion',
-  password: 'pcps123',
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
 // Initialize Express app
@@ -95,10 +98,10 @@ app.use('*', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 5002;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Admin Dashboard: http://localhost:${PORT}/api/admin`);
-  console.log(`🏢 Business Profiles: http://localhost:${PORT}/api/business`);
-  console.log(`🔔 Notifications: http://localhost:${PORT}/api/notifications`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Admin Dashboard: http://localhost:${PORT}/api/admin`);
+  console.log(`Business Profiles: http://localhost:${PORT}/api/business`);
+  console.log(`Notifications: http://localhost:${PORT}/api/notifications`);
 });
 
 // Handle graceful shutdown
