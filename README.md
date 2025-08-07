@@ -145,32 +145,20 @@ ALLOWED_ORIGINS=http://localhost:5174,http://localhost:3000
 - **Pro ($29/month)**: Unlimited forms, 5,000 responses, AI features  
 - **Enterprise ($99/month)**: Unlimited usage, team features, priority support
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙋‍♂️ Support
 
-For support and questions:
+For questions and support:
 - Create an issue on GitHub
-- Email: your-email@domain.com
+- Email: feedback@feedbackfusion.com
 
-## 🎯 Roadmap
+## 🎯 Next Steps
 
-- [ ] Mobile app development
-- [ ] Advanced AI features
+- [ ] Advanced AI analytics and insights
+- [ ] Mobile-responsive form embedding
 - [ ] Third-party integrations (Slack, Teams)
 - [ ] Multi-language support
-- [ ] Advanced reporting features
+- [ ] Advanced export and reporting
 
 ---
 
-**Built with ❤️ using modern web technologies**
+**FeedbackFusion - Modern feedback management platform**
