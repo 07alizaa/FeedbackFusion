@@ -151,8 +151,9 @@ const getAllUsers = async (req, res) => {
       });
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    // SECURITY: Validate and sanitize pagination parameters
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50)); // Max 100 items per page
     const offset = (page - 1) * limit;
 
     const usersResult = await pool.query(`
@@ -221,6 +222,21 @@ const updateUserStatus = async (req, res) => {
     const userId = req.user.userId;
     const targetUserId = req.params.userId;
     const { status } = req.body;
+    
+    // SECURITY: Validate input parameters
+    if (!targetUserId || isNaN(parseInt(targetUserId))) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request'  // Generic error message
+      });
+    }
+
+    if (!status || !['pending', 'approved', 'rejected', 'suspended'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request'  // Generic error message
+      });
+    }
     
     // Check if user is admin
     const userCheck = await pool.query(

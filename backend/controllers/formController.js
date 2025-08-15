@@ -496,11 +496,26 @@ const getFormEntries = async (req, res) => {
   const { page = 1, limit = 10, flagged, contacted } = req.query;
 
   try {
-    // Validate ID is a number
-    if (isNaN(parseInt(id))) {
+    // SECURITY: Validate form ID parameter
+    if (!id || isNaN(parseInt(id))) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid form ID'
+        message: 'Invalid request'  // Generic error message
+      });
+    }
+
+    // SECURITY: Validate query parameters
+    if (flagged !== undefined && !['true', 'false'].includes(flagged)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request'  // Generic error message
+      });
+    }
+
+    if (contacted !== undefined && !['true', 'false'].includes(contacted)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid request'  // Generic error message
       });
     }
 
@@ -513,7 +528,7 @@ const getFormEntries = async (req, res) => {
     if (formResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Form not found or you do not have permission to view its entries'
+        message: 'Not found'  // Generic error message
       });
     }
 
@@ -595,6 +610,14 @@ const resubmitForm = async (req, res) => {
   const formId = req.params.id;
   const userId = req.user.userId;
   const { title, config } = req.body;
+
+  // SECURITY: Validate input parameters
+  if (!formId || isNaN(parseInt(formId))) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid request'  // Generic error message
+    });
+  }
 
   console.log('Resubmit form request:', { formId, userId, title, configType: typeof config });
 

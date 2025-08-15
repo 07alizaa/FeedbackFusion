@@ -99,7 +99,18 @@ export function validateEmail(email) {
 }
 
 export function validatePassword(password) {
-  return password.length >= 8;
+  // SECURITY: Enhanced password validation - minimum 12 characters with complexity requirements
+  if (password.length < 12) {
+    return false;
+  }
+  
+  // Check for uppercase, lowercase, number, and special character
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[@$!%*?&]/.test(password);
+  
+  return hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
 }
 
 export function getStatusColor(status) {

@@ -27,11 +27,11 @@ const signup = async (req, res) => {
   } = req.body;
 
   try {
-    // Input validation
+    // SECURITY: Input validation with generic error messages
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required'
+        message: 'Invalid input provided'  // Generic error message
       });
     }
 
@@ -40,15 +40,24 @@ const signup = async (req, res) => {
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid email address'
+        message: 'Invalid input provided'  // Generic error message
       });
     }
 
-    // Validate password strength (minimum 6 characters)
-    if (password.length < 6) {
+    // SECURITY: Enhanced password validation - minimum 12 characters with complexity requirements
+    if (password.length < 12) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long'
+        message: 'Password requirements not met'  // Generic error message
+      });
+    }
+
+    // Check password complexity: uppercase, lowercase, number, special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password requirements not met'  // Generic error message
       });
     }
 
@@ -56,7 +65,7 @@ const signup = async (req, res) => {
     if (role !== 'vendor') {
       return res.status(400).json({
         success: false,
-        message: 'Only business/vendor accounts can sign up. Admin access is restricted.'
+        message: 'Registration not available for this account type'  // Generic error message
       });
     }
 
@@ -134,10 +143,10 @@ const signup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('Signup error:', error); // SECURITY: Log detailed error server-side
     res.status(500).json({
       success: false,
-      message: 'Internal server error during signup'
+      message: 'Registration failed'  // SECURITY: Generic error message to client
     });
   }
 };
@@ -151,30 +160,12 @@ const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required'
+        message: 'Authentication failed'  // SECURITY: Generic error message
       });
     }
 
-    // Check for admin credentials
-    if (email.toLowerCase() === 'admin@gmail.com' && password === 'Admin@1234') {
-      // Generate JWT token for admin
-      const token = generateToken('admin', 'admin@gmail.com', 'admin');
-
-      return res.status(200).json({
-        success: true,
-        message: 'Admin login successful',
-        data: {
-          user: {
-            id: 'admin',
-            name: 'System Administrator',
-            email: 'admin@gmail.com',
-            role: 'admin',
-            createdAt: new Date().toISOString()
-          },
-          token
-        }
-      });
-    }
+    // SECURITY FIX: Removed hardcoded admin credentials bypass
+    // All authentication now goes through database verification
 
     // Find user by email
     const userResult = await pool.query(
@@ -195,9 +186,10 @@ const login = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {
+      console.log(`Failed login attempt for email: ${email}`); // SECURITY: Log failed attempts server-side
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: 'Authentication failed'  // SECURITY: Generic error message
       });
     }
 
@@ -222,10 +214,10 @@ const login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error:', error); // SECURITY: Log detailed error server-side
     res.status(500).json({
       success: false,
-      message: 'Internal server error during login'
+      message: 'Authentication failed'  // SECURITY: Generic error message to client
     });
   }
 };
@@ -235,24 +227,8 @@ const getProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // Handle admin user specially since admin doesn't exist in the users table
-    if (userId === 'admin') {
-      return res.status(200).json({
-        success: true,
-        data: {
-          id: 'admin',
-          name: 'Administrator',
-          email: 'admin@gmail.com',
-          role: 'admin',
-          business_name: null,
-          phone: null,
-          industry: null,
-          company_size: null,
-          created_at: new Date().toISOString()
-        }
-      });
-    }
-
+    // SECURITY FIX: Removed hardcoded admin handling - all users must be in database
+    
     const userResult = await pool.query(
       'SELECT id, name, email, role, business_name, phone, industry, company_size, created_at FROM users WHERE id = $1',
       [userId]

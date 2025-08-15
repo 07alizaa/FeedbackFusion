@@ -181,8 +181,7 @@ async function initializeDatabase() {
 
     // Insert default admin user if it doesn't exist
     try {
-      const defaultAdminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'AdminChangeMe123!';
-      const hashedPassword = await bcrypt.hash(defaultAdminPassword, 12);
+      const hashedPassword = await bcrypt.hash('Admin@1234', 12);
       
       await client.query(`
         INSERT INTO users (name, email, password_hash, role, status, created_at, updated_at)

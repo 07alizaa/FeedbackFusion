@@ -19,23 +19,9 @@ const authenticateToken = async (req, res, next) => {
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Handle special admin case (hardcoded admin)
-    if (decoded.userId === 'admin' && decoded.role === 'admin') {
-      req.user = {
-        userId: 'admin',
-        email: 'admin@feedbackfusion.com',
-        role: 'admin',
-        userDetails: {
-          id: 'admin',
-          name: 'System Administrator',
-          email: 'admin@feedbackfusion.com',
-          role: 'admin'
-        }
-      };
-      return next();
-    }
-
-    // Optional: Verify user still exists in database
+    // SECURITY FIX: Removed hardcoded admin bypass - all users must exist in database
+    
+    // Verify user exists in database (required for all users including admins)
     const userResult = await pool.query(
       'SELECT id, name, email, role FROM users WHERE id = $1',
       [decoded.userId]
@@ -44,7 +30,7 @@ const authenticateToken = async (req, res, next) => {
     if (userResult.rows.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'User no longer exists'
+        message: 'Authentication failed'  // SECURITY: Generic error message
       });
     }
 

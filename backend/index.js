@@ -22,11 +22,11 @@ const notificationRoutes = require('./routes/notification');
 
 // Database connection
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'feedbackfusion',
-  password: 'password@1111',
-  port: 5432,
+  user: process.env.DB_USER || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'feedbackfusion',
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT || 5432,
 });
 
 // Initialize Express app
