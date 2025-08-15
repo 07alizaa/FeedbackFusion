@@ -1,5 +1,5 @@
 // controllers/authController.js - Authentication logic
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 
@@ -52,11 +52,11 @@ const signup = async (req, res) => {
       });
     }
 
-    // Validate role
-    if (!['vendor', 'admin'].includes(role)) {
+    // Only allow vendor signups - admin account is pre-configured
+    if (role !== 'vendor') {
       return res.status(400).json({
         success: false,
-        message: 'Role must be either vendor or admin'
+        message: 'Only business/vendor accounts can sign up. Admin access is restricted.'
       });
     }
 
@@ -77,8 +77,9 @@ const signup = async (req, res) => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create new user (vendors start as pending approval)
-    const userStatus = role === 'admin' ? 'approved' : 'pending';
+    // Create new user (all signups are vendors and start as pending approval)
+    const userStatus = 'pending';
+    const userRole = 'vendor';
     const newUser = await pool.query(
       `INSERT INTO users (name, email, password_hash, role, business_name, phone, industry, company_size, marketing_opt_in, status) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
@@ -87,7 +88,7 @@ const signup = async (req, res) => {
         name.trim(), 
         email.toLowerCase(), 
         hashedPassword, 
-        role,
+        userRole,
         businessName || null,
         phone || null,
         industry || null,
@@ -102,8 +103,8 @@ const signup = async (req, res) => {
     // Generate JWT token
     const token = generateToken(user.id, user.email, user.role);
 
-    // Emit real-time notification for new business registration (only for vendors)
-    if (role === 'vendor' && typeof global.emitNotification === 'function') {
+    // Emit real-time notification for new business registration
+    if (typeof global.emitNotification === 'function') {
       global.emitNotification('business_registered', {
         id: user.id,
         businessName: businessName || name,
@@ -116,9 +117,7 @@ const signup = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: userStatus === 'pending' 
-        ? 'Registration successful! Your account is pending admin approval. You will be notified once approved.'
-        : 'User created successfully',
+      message: 'Registration successful! Your account is pending admin approval. You will be notified once approved.',
       data: {
         user: {
           id: user.id,
@@ -129,8 +128,8 @@ const signup = async (req, res) => {
           status: user.status,
           createdAt: user.created_at
         },
-        token: userStatus === 'approved' ? token : null,
-        requiresApproval: userStatus === 'pending'
+        token: null, // No token until approved
+        requiresApproval: true
       }
     });
 
@@ -156,10 +155,10 @@ const login = async (req, res) => {
       });
     }
 
-    // Check for hardcoded admin credentials
-    if (email.toLowerCase() === 'admin@feedbackfusion.com' && password === 'admin123456') {
+    // Check for admin credentials
+    if (email.toLowerCase() === 'admin@gmail.com' && password === 'Admin@1234') {
       // Generate JWT token for admin
-      const token = generateToken('admin', 'admin@feedbackfusion.com', 'admin');
+      const token = generateToken('admin', 'admin@gmail.com', 'admin');
 
       return res.status(200).json({
         success: true,
@@ -168,7 +167,7 @@ const login = async (req, res) => {
           user: {
             id: 'admin',
             name: 'System Administrator',
-            email: 'admin@feedbackfusion.com',
+            email: 'admin@gmail.com',
             role: 'admin',
             createdAt: new Date().toISOString()
           },
@@ -243,7 +242,7 @@ const getProfile = async (req, res) => {
         data: {
           id: 'admin',
           name: 'Administrator',
-          email: 'admin@feedbackfusion.com',
+          email: 'admin@gmail.com',
           role: 'admin',
           business_name: null,
           phone: null,

@@ -11,7 +11,12 @@ const crypto = require('crypto');
  */
 async function generateFormQRCode(formId, options = {}) {
     try {
+        console.log('🔍 QR Service - generateFormQRCode called');
+        console.log('📝 Form ID:', formId, typeof formId);
+        console.log('⚙️ Options:', JSON.stringify(options, null, 2));
+
         // Get form details
+        console.log('🔍 Getting form details from database...');
         const formResult = await pool.query(`
             SELECT ff.*, u.business_name 
             FROM feedback_forms ff 
@@ -19,18 +24,32 @@ async function generateFormQRCode(formId, options = {}) {
             WHERE ff.id = $1
         `, [formId]);
 
+        console.log('📊 Form query result:', formResult.rows.length, 'rows found');
         if (formResult.rows.length === 0) {
+            console.log('❌ Form not found in database');
             throw new Error('Form not found');
         }
 
         const form = formResult.rows[0];
+        console.log('📋 Form details:', JSON.stringify({
+            id: form.id,
+            title: form.title,
+            user_id: form.user_id,
+            business_name: form.business_name,
+            is_approved: form.is_approved,
+            is_active: form.is_active
+        }, null, 2));
         
         // Generate unique code for the form
+        console.log('🔍 Generating unique code...');
         const uniqueCode = crypto.randomBytes(8).toString('hex');
+        console.log('🆔 Generated unique code:', uniqueCode);
         
         // Create the public form URL
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5175';
         const formUrl = `${baseUrl}/form/${formId}?code=${uniqueCode}`;
+        console.log('🔗 Form URL:', formUrl);
+        console.log('🌍 Base URL from env:', baseUrl);
         
         // QR code options
         const qrOptions = {
@@ -45,21 +64,29 @@ async function generateFormQRCode(formId, options = {}) {
             width: options.width || 256,
             ...options
         };
+        console.log('🎨 QR Options:', JSON.stringify(qrOptions, null, 2));
 
         // Generate QR code as data URL
+        console.log('🔍 Generating QR code data URL...');
         const qrCodeDataUrl = await QRCode.toDataURL(formUrl, qrOptions);
+        console.log('✅ QR code data URL generated, length:', qrCodeDataUrl.length);
         
         // Generate QR code as buffer for file storage
+        console.log('🔍 Generating QR code buffer...');
         const qrCodeBuffer = await QRCode.toBuffer(formUrl, qrOptions);
+        console.log('✅ QR code buffer generated, size:', qrCodeBuffer.length, 'bytes');
         
         // Update form with QR code data
-        await pool.query(`
+        console.log('🔍 Updating form with QR code data...');
+        const updateResult = await pool.query(`
             UPDATE feedback_forms 
             SET qr_code = $1, qr_code_active = true, updated_at = NOW()
             WHERE id = $2
         `, [qrCodeDataUrl, formId]);
+        console.log('📊 Update result rows affected:', updateResult.rowCount);
 
         // Log QR code generation
+        console.log('🔍 Logging QR code generation event...');
         await pool.query(`
             INSERT INTO analytics_events (form_id, event_type, event_data, timestamp)
             VALUES ($1, 'qr_code_generated', $2, NOW())
@@ -68,8 +95,9 @@ async function generateFormQRCode(formId, options = {}) {
             generatedAt: new Date().toISOString(),
             options: qrOptions 
         })]);
+        console.log('✅ QR code generation event logged');
 
-        return {
+        const response = {
             qrCodeDataUrl,
             qrCodeBuffer,
             formUrl,
@@ -79,9 +107,18 @@ async function generateFormQRCode(formId, options = {}) {
             isActive: true
         };
 
+        console.log('✅ QR Service - Returning response:', JSON.stringify({
+            ...response,
+            qrCodeBuffer: `[Buffer ${response.qrCodeBuffer.length} bytes]`,
+            qrCodeDataUrl: `[DataURL ${response.qrCodeDataUrl.length} chars]`
+        }, null, 2));
+
+        return response;
+
     } catch (error) {
-        console.error('Error generating QR code:', error);
-        throw new Error('Failed to generate QR code');
+        console.error('❌ QR Service Error:', error);
+        console.error('❌ QR Service Error Stack:', error.stack);
+        throw new Error('Failed to generate QR code: ' + error.message);
     }
 }
 

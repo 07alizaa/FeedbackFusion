@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   MagnifyingGlassIcon,
   EyeIcon,
   TrashIcon,
-  PencilIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
   EnvelopeIcon,
@@ -14,11 +13,11 @@ import {
   BuildingStorefrontIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import { Input } from '../ui/Input';
-import Badge from '../ui/Badge';
-import LoadingSpinner from '../ui/Loading';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
+import LoadingSpinner from '../../components/ui/Loading';
 import { adminAPI } from '../../lib/api';
 import { formatDate } from '../../lib/utils';
 
@@ -32,131 +31,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, roleFilter, statusFilter]);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await adminAPI.getUsers();
-      const userData = response.data.data || getMockUsers();
-      setUsers(userData);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      // Load mock data on error
-      setUsers(getMockUsers());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getMockUsers = () => [
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john@techcorp.com',
-      role: 'vendor',
-      status: 'active',
-      businessName: 'TechCorp Solutions',
-      subscription: 'professional',
-      createdAt: '2024-01-10T10:30:00Z',
-      lastLoginAt: '2024-01-15T09:45:00Z',
-      formsCount: 25,
-      responsesCount: 1250,
-      isEmailVerified: true,
-      phone: '+1-555-0123',
-      avatar: null,
-    },
-    {
-      id: 2,
-      name: 'Sarah Williams',
-      email: 'sarah@digitaldynamics.com',
-      role: 'vendor',
-      status: 'active',
-      businessName: 'Digital Dynamics',
-      subscription: 'professional',
-      createdAt: '2024-01-08T11:15:00Z',
-      lastLoginAt: '2024-01-14T16:20:00Z',
-      formsCount: 18,
-      responsesCount: 890,
-      isEmailVerified: true,
-      phone: '+1-555-0789',
-      avatar: null,
-    },
-    {
-      id: 3,
-      name: 'Michael Johnson',
-      email: 'michael@nextgen.com',
-      role: 'vendor',
-      status: 'pending',
-      businessName: 'NextGen Solutions',
-      subscription: 'starter',
-      createdAt: '2024-01-14T15:30:00Z',
-      lastLoginAt: null,
-      formsCount: 0,
-      responsesCount: 0,
-      isEmailVerified: false,
-      phone: '+1-555-0456',
-      avatar: null,
-    },
-    {
-      id: 4,
-      name: 'Emily Rodriguez',
-      email: 'emily@innovationlabs.com',
-      role: 'vendor',
-      status: 'suspended',
-      businessName: 'Innovation Labs',
-      subscription: 'enterprise',
-      createdAt: '2024-01-05T14:20:00Z',
-      lastLoginAt: '2024-01-14T12:30:00Z',
-      formsCount: 12,
-      responsesCount: 560,
-      isEmailVerified: true,
-      phone: '+1-555-0345',
-      avatar: null,
-      suspensionReason: 'Terms of service violation',
-    },
-    {
-      id: 5,
-      name: 'Admin User',
-      email: 'admin@feedbackfusion.com',
-      role: 'admin',
-      status: 'active',
-      businessName: null,
-      subscription: null,
-      createdAt: '2024-01-01T00:00:00Z',
-      lastLoginAt: '2024-01-15T10:00:00Z',
-      formsCount: 0,
-      responsesCount: 0,
-      isEmailVerified: true,
-      phone: '+1-555-ADMIN',
-      avatar: null,
-    },
-    {
-      id: 6,
-      name: 'David Chen',
-      email: 'david@greenearth.com',
-      role: 'vendor',
-      status: 'rejected',
-      businessName: 'Green Earth Consultancy',
-      subscription: 'starter',
-      createdAt: '2024-01-12T09:45:00Z',
-      lastLoginAt: '2024-01-13T08:30:00Z',
-      formsCount: 0,
-      responsesCount: 0,
-      isEmailVerified: true,
-      phone: '+1-555-0012',
-      avatar: null,
-      rejectionReason: 'Incomplete business documentation',
-    },
-  ];
-
-  const filterUsers = () => {
+  const filterUsers = useCallback(() => {
     let filtered = [...users];
 
     // Apply search filter
@@ -179,6 +54,29 @@ const UserManagement = () => {
     }
 
     setFilteredUsers(filtered);
+  }, [users, searchTerm, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    filterUsers();
+  }, [filterUsers]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await adminAPI.getUsers();
+      const userData = response.data.data || [];
+      setUsers(userData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      // Show empty array on error instead of mock data
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleUserAction = async (userId, action, reason = null) => {
@@ -251,8 +149,26 @@ const UserManagement = () => {
   };
 
   const getInitials = (name) => {
-    return name
-      .split(' ')
+    // Return empty string if input is missing, null, undefined, or not a string
+    if (!name || typeof name !== 'string') {
+      return '';
+    }
+    
+    // Trim extra spaces and split by space
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return '';
+    }
+    
+    const nameParts = trimmedName.split(/\s+/);
+    
+    // Handle single-word names (e.g., "Alice" → "A")
+    if (nameParts.length === 1) {
+      return nameParts[0][0].toUpperCase();
+    }
+    
+    // Handle multi-word names (take first letter of each word)
+    return nameParts
       .map(n => n[0])
       .join('')
       .toUpperCase();
@@ -361,7 +277,7 @@ const UserManagement = () => {
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
                             <span className="text-sm font-medium text-primary-700">
-                              {getInitials(user.name)}
+                              {getInitials(user.name || user.fullName || user.email || "")}
                             </span>
                           </div>
                         )}
@@ -517,8 +433,26 @@ const UserDetailModal = ({ user, onClose, onAction, actionLoading }) => {
   };
 
   const getInitials = (name) => {
-    return name
-      .split(' ')
+    // Return empty string if input is missing, null, undefined, or not a string
+    if (!name || typeof name !== 'string') {
+      return '';
+    }
+    
+    // Trim extra spaces and split by space
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return '';
+    }
+    
+    const nameParts = trimmedName.split(/\s+/);
+    
+    // Handle single-word names (e.g., "Alice" → "A")
+    if (nameParts.length === 1) {
+      return nameParts[0][0].toUpperCase();
+    }
+    
+    // Handle multi-word names (take first letter of each word)
+    return nameParts
       .map(n => n[0])
       .join('')
       .toUpperCase();
@@ -577,7 +511,7 @@ const UserDetailModal = ({ user, onClose, onAction, actionLoading }) => {
                 ) : (
                   <div className="h-16 w-16 rounded-full bg-primary-100 flex items-center justify-center">
                     <span className="text-xl font-medium text-primary-700">
-                      {getInitials(user.name)}
+                      {getInitials(user.name || user.fullName || user.email || "")}
                     </span>
                   </div>
                 )}

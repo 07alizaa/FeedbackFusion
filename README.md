@@ -26,7 +26,7 @@ A modern, full-stack SaaS platform for customer feedback management with AI-powe
 - **Node.js** with Express.js framework
 - **PostgreSQL** database with optimized schema
 - **Socket.IO** for real-time features
-- **JWT** authentication with bcrypt
+- **JWT** authentication with bcryptjs
 - **OpenAI** integration for AI features
 
 ### Frontend  

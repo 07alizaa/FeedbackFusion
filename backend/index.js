@@ -19,10 +19,10 @@ const notificationRoutes = require('./routes/notification');
 
 // Database connection
 const pool = new Pool({
-  user: 'saishtiwari',
+  user: 'postgres',
   host: 'localhost',
   database: 'feedbackfusion',
-  password: 'pcps123',
+  password: 'password%401111',
   port: 5432,
 });
 
@@ -95,10 +95,10 @@ app.use('*', (req, res) => {
 // Start server
 const PORT = process.env.PORT || 5002;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Admin Dashboard: http://localhost:${PORT}/api/admin`);
-  console.log(`🏢 Business Profiles: http://localhost:${PORT}/api/business`);
-  console.log(`🔔 Notifications: http://localhost:${PORT}/api/notifications`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Admin Dashboard: http://localhost:${PORT}/api/admin`);
+  console.log(`Business Profiles: http://localhost:${PORT}/api/business`);
+  console.log(`Notifications: http://localhost:${PORT}/api/notifications`);
 });
 
 // Handle graceful shutdown

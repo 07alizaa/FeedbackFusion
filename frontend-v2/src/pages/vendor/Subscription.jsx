@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { CheckIcon, CreditCardIcon, StarIcon } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Badge from '../ui/Badge';
-import LoadingSpinner from '../ui/Loading';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import LoadingSpinner from '../../components/ui/Loading';
 import { subscriptionAPI } from '../../lib/api';
 import { formatCurrency } from '../../lib/utils';
 

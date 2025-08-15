@@ -158,16 +158,16 @@ const getAllUsers = async (req, res) => {
     const usersResult = await pool.query(`
       SELECT 
         u.id,
-        u.username,
+        u.name as username,
         u.email,
+        u.role,
+        u.business_name,
+        u.phone,
+        u.industry,
+        u.status,
         u.created_at,
-        u.last_login,
-        u.is_flagged,
-        u.verification_status,
-        sp.name as subscription
+        u.updated_at
       FROM users u
-      LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
-      LEFT JOIN subscription_plans sp ON s.plan_id = sp.id
       WHERE u.role != 'admin'
       ORDER BY u.created_at DESC
       LIMIT $1 OFFSET $2
@@ -178,9 +178,26 @@ const getAllUsers = async (req, res) => {
     `);
     const total = parseInt(totalResult.rows[0].count);
 
+    // Format the response data
+    const users = usersResult.rows.map(user => ({
+      id: user.id,
+      username: user.username || 'N/A',
+      email: user.email,
+      role: user.role,
+      businessName: user.business_name,
+      phone: user.phone,
+      industry: user.industry,
+      status: user.status || 'approved',
+      createdAt: user.created_at,
+      lastLogin: user.updated_at || user.created_at,
+      isFlagged: false,
+      verificationStatus: user.status || 'approved',
+      subscription: 'Free'
+    }));
+
     res.json({
       success: true,
-      users: usersResult.rows,
+      data: users,
       pagination: {
         page,
         limit,

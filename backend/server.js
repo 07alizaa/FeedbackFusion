@@ -9,9 +9,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -22,34 +22,29 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Import and use routes one by one to isolate the issue
-console.log('Importing authRoutes...');
+// Import routes
 const authRoutes = require('./routes/authRoutes');
-console.log('✅ authRoutes imported');
-
-// API Routes - Testing authRoutes only first
-console.log('Registering authRoutes...');
-app.use('/api/auth', authRoutes); // Authentication routes
-console.log('✅ authRoutes registered');
-
-// Comment out other routes for now
-/*
-console.log('Importing formRoutes...');
 const formRoutes = require('./routes/formRoutes');
-console.log('✅ formRoutes imported');
-
-console.log('Importing feedbackRoutes...');
 const feedbackRoutes = require('./routes/feedbackRoutes');
-console.log('✅ feedbackRoutes imported');
+const qrRoutes = require('./routes/qr');
+const businessRoutes = require('./routes/business');
+const adminRoutes = require('./routes/admin');
+const aiRoutes = require('./routes/ai');
+const subscriptionRoutes = require('./routes/subscription');
+const userRoutes = require('./routes/userRoutes');
+const notificationRoutes = require('./routes/notification');
 
-console.log('Registering formRoutes...');
-app.use('/api/forms', formRoutes); // Form management routes
-console.log('✅ formRoutes registered');
-
-console.log('Registering feedbackRoutes...');
-app.use('/api', feedbackRoutes); // Feedback submission routes
-console.log('✅ feedbackRoutes registered');
-*/
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/forms', formRoutes);
+app.use('/api', feedbackRoutes);
+app.use('/api/qr', qrRoutes);
+app.use('/api/business', businessRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Global error handler middleware
 app.use((err, req, res, next) => {
@@ -74,10 +69,8 @@ app.listen(PORT, async () => {
   console.log(`🚀 FeedbackFusion Backend running on port ${PORT}`);
   
   try {
-    console.log('📊 Initializing database...');
     await initializeDatabase();
-    console.log('✅ Database initialized successfully!');
-    console.log('🎯 Server ready for testing!');
+    console.log('✅ Server ready!');
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
   }

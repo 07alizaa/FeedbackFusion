@@ -4,7 +4,7 @@ A complete Node.js backend MVP for a customer feedback collection platform with 
 
 ## Features
 
-- **User Authentication**: JWT-based auth with bcrypt password hashing
+- **User Authentication**: JWT-based auth with bcryptjs password hashing
 - **Role-Based Access**: Vendor and Admin roles with protected routes
 - **Feedback Forms**: Create, update, delete, and manage feedback forms
 - **Anonymous Feedback**: Public feedback submission with optional contact details
@@ -17,7 +17,7 @@ A complete Node.js backend MVP for a customer feedback collection platform with 
 - **Runtime**: Node.js
 - **Framework**: Express.js
 - **Database**: PostgreSQL with pg driver
-- **Authentication**: JWT + bcrypt
+- **Authentication**: JWT + bcryptjs
 - **Environment**: dotenv
 - **CORS**: cors middleware
 
@@ -237,7 +237,7 @@ Scores range from 0-100, with top 10-20% flagged for vendor review.
 ## Authentication & Security
 
 - **JWT Tokens**: 24-hour expiration, signed with secure secret
-- **Password Hashing**: bcrypt with 12 salt rounds
+- **Password Hashing**: bcryptjs with 12 salt rounds
 - **Role-Based Access**: Middleware enforces vendor/admin permissions
 - **Input Validation**: Comprehensive validation on all endpoints
 - **CORS**: Configurable cross-origin resource sharing

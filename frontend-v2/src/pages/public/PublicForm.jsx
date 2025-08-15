@@ -11,7 +11,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import LoadingSpinner from '../../components/ui/Loading';
-import { publicAPI } from '../../lib/api';
+import { publicAPI, formsAPI } from '../../lib/api';
 
 const PublicForm = () => {
   const { businessId, formId } = useParams();
@@ -32,13 +32,33 @@ const PublicForm = () => {
   const fetchFormData = async () => {
     try {
       setLoading(true);
-      const [formRes, businessRes] = await Promise.all([
-        publicAPI.getForm(businessId, formId),
-        publicAPI.getBusiness(businessId),
-      ]);
       
-      setForm(formRes.data.data);
-      setBusiness(businessRes.data.data);
+      // If we have both businessId and formId, use the old API structure
+      if (businessId && formId) {
+        const [formRes, businessRes] = await Promise.all([
+          publicAPI.getForm(businessId, formId),
+          publicAPI.getBusiness(businessId),
+        ]);
+        
+        setForm(formRes.data.data);
+        setBusiness(businessRes.data.data);
+      } 
+      // If we only have formId (from QR code), use the simpler API
+      else if (formId) {
+        const formRes = await formsAPI.getForm(formId);
+        
+        if (formRes.data.success) {
+          setForm(formRes.data.data);
+          // If form has business info, set it
+          if (formRes.data.data.business) {
+            setBusiness(formRes.data.data.business);
+          }
+        } else {
+          throw new Error('Form not found');
+        }
+      } else {
+        throw new Error('No form ID provided');
+      }
     } catch (error) {
       console.error('Error fetching form data:', error);
       setError('Form not found or no longer available');
@@ -52,7 +72,13 @@ const PublicForm = () => {
       setSubmitting(true);
       setError(null);
       
-      await publicAPI.submitForm(businessId, formId, data);
+      // Use the appropriate submission method based on available parameters
+      if (businessId && formId) {
+        await publicAPI.submitForm(businessId, formId, data);
+      } else if (formId) {
+        await formsAPI.submitFeedback(formId, data);
+      }
+      
       setSubmitted(true);
       reset();
     } catch (error) {
@@ -198,7 +224,7 @@ const PublicForm = () => {
           <p className="text-gray-600 mb-6">
             Your feedback has been submitted successfully. We appreciate your time and input.
           </p>
-          <Button onClick={() => navigate(`/business/${businessId}`)}>
+          <Button onClick={() => navigate(`/business/${businessId || 'unknown'}`)}>
             View Business Profile
           </Button>
         </Card>

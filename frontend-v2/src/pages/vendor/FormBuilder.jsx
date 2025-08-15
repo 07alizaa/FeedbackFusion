@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-hot-toast';
 import {
   DndContext,
   closestCenter,
@@ -25,13 +26,18 @@ import {
   Cog6ToothIcon,
   PencilIcon,
   Bars3Icon,
+  ShareIcon,
+  QrCodeIcon,
+  LinkIcon,
+  ClipboardDocumentIcon,
 } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import { Input } from '../ui/Input';
-import Badge from '../ui/Badge';
-import LoadingSpinner from '../ui/Loading';
-import { formAPI } from '../../lib/api';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
+import LoadingSpinner from '../../components/ui/Loading';
+import { formAPI, qrAPI } from '../../lib/api';
+import { copyToClipboard } from '../../lib/utils';
 
 // Field type definitions
 const FIELD_TYPES = {
@@ -113,7 +119,10 @@ const FormBuilder = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const formId = new URLSearchParams(window.location.search).get('id');
+  const [qrCode, setQrCode] = useState(null);
+  const [generatingQR, setGeneratingQR] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [formId, setFormId] = useState(new URLSearchParams(window.location.search).get('id'));
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -122,22 +131,19 @@ const FormBuilder = () => {
     })
   );
 
-  useEffect(() => {
-    if (formId) {
-      loadForm();
-    }
-  }, [formId]);
-
-  const loadForm = async () => {
+  const loadForm = useCallback(async () => {
     try {
       setLoading(true);
       const response = await formAPI.getForm(formId);
       const form = response.data.data;
+      
+      // Parse the backend response structure
+      const config = form.config || {};
       setFormData({
         title: form.title,
-        description: form.description || '',
-        fields: form.fields || [],
-        settings: form.settings || {
+        description: config.description || '',
+        fields: config.fields || [],
+        settings: config.settings || {
           allowAnonymous: true,
           requireAuth: false,
           maxResponses: null,
@@ -149,7 +155,13 @@ const FormBuilder = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [formId]);
+
+  useEffect(() => {
+    if (formId) {
+      loadForm();
+    }
+  }, [formId, loadForm]);
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -231,19 +243,87 @@ const FormBuilder = () => {
   const saveForm = async () => {
     try {
       setSaving(true);
+      
+      // Prepare the data structure expected by the backend
+      const formPayload = {
+        title: formData.title,
+        config: {
+          description: formData.description,
+          fields: formData.fields,
+          settings: formData.settings
+        }
+      };
+      
       if (formId) {
-        await formAPI.updateForm(formId, formData);
+        await formAPI.updateForm(formId, formPayload);
+        toast.success('Form updated successfully!');
       } else {
-        const response = await formAPI.createForm(formData);
-        window.history.replaceState(null, '', `?id=${response.data.data.id}`);
+        const response = await formAPI.createForm(formPayload);
+        const newFormId = response.data.data.id;
+        setFormId(newFormId); // Update the formId state
+        window.history.replaceState(null, '', `?id=${newFormId}`);
+        toast.success('Form created successfully!');
+        // QR code can be generated manually using the "Generate QR" button
       }
-      // Show success message
     } catch (error) {
       console.error('Error saving form:', error);
-      // Show error message
+      
+      // Handle specific error cases
+      if (error.response?.status === 403) {
+        const message = error.response?.data?.message || 'Access denied. Your account may need admin approval.';
+        toast.error(message);
+      } else if (error.response?.status === 400) {
+        const message = error.response?.data?.message || 'Invalid form data. Please check your inputs.';
+        toast.error(message);
+      } else {
+        toast.error('Failed to save form. Please try again.');
+      }
     } finally {
       setSaving(false);
     }
+  };
+
+  const generateQRCode = async (targetFormId = formId) => {
+    if (!targetFormId) {
+      toast.error('Please save the form first to generate QR code');
+      return;
+    }
+
+    try {
+      setGeneratingQR(true);
+      const response = await qrAPI.generate(targetFormId);
+      setQrCode(response.data.data);
+      toast.success('QR code generated successfully!');
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      toast.error('Failed to generate QR code');
+    } finally {
+      setGeneratingQR(false);
+    }
+  };
+
+  const copyFormLink = async () => {
+    if (!formId) {
+      toast.error('Please save the form first to get the link');
+      return;
+    }
+
+    try {
+      const formUrl = `${window.location.origin}/form/business/${formId}`;
+      await copyToClipboard(formUrl);
+      toast.success('Form link copied to clipboard!');
+    } catch (error) {
+      console.error('Error copying link:', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleShare = () => {
+    if (!formId) {
+      toast.error('Please save the form first to share it');
+      return;
+    }
+    setShowShareModal(true);
   };
 
   if (loading) {
@@ -298,6 +378,27 @@ const FormBuilder = () => {
                 <EyeIcon className="h-4 w-4 mr-2" />
                 {previewMode ? 'Edit' : 'Preview'}
               </Button>
+              {formId && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={handleShare}
+                    className="flex items-center"
+                  >
+                    <ShareIcon className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => generateQRCode()}
+                    loading={generatingQR}
+                    className="flex items-center"
+                  >
+                    <QrCodeIcon className="h-4 w-4 mr-2" />
+                    {qrCode ? 'Regenerate QR' : 'Generate QR'}
+                  </Button>
+                </>
+              )}
               <Button onClick={saveForm} loading={saving}>
                 {formId ? 'Update Form' : 'Save Form'}
               </Button>
@@ -357,12 +458,83 @@ const FormBuilder = () => {
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Share Form</h3>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Form Link */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Form Link
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={`${window.location.origin}/public/forms/${formId}`}
+                    readOnly
+                    className="flex-1 p-2 border border-gray-300 rounded-l-md bg-gray-50"
+                  />
+                  <Button
+                    onClick={copyFormLink}
+                    variant="outline"
+                    className="rounded-l-none border-l-0"
+                  >
+                    <ClipboardDocumentIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* QR Code */}
+              {qrCode && (
+                <div className="text-center">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    QR Code
+                  </label>
+                  <div className="inline-block p-4 bg-white border rounded-lg">
+                    <img src={qrCode} alt="QR Code" className="max-w-[200px] h-auto" />
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowShareModal(false)}
+                >
+                  Close
+                </Button>
+                {!qrCode && (
+                  <Button
+                    onClick={() => generateQRCode()}
+                    loading={generatingQR}
+                  >
+                    Generate QR Code
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // Sortable Field Editor Component
-const SortableFieldEditor = ({ field, isSelected, onSelect, onUpdate, onDelete, onDuplicate }) => {
+const SortableFieldEditor = ({ field, isSelected, onSelect, onDelete, onDuplicate }) => {
   const {
     attributes,
     listeners,
@@ -429,7 +601,7 @@ const SortableFieldEditor = ({ field, isSelected, onSelect, onUpdate, onDelete, 
 };
 
 // Field Editor Component
-const FieldEditor = ({ field, isSelected, onSelect, onUpdate, onDelete, onDuplicate, dragHandleProps }) => {
+const FieldEditor = ({ field, isSelected, onSelect, onDelete, onDuplicate, dragHandleProps }) => {
   return (
     <div
       className={`relative group border-2 rounded-lg p-4 cursor-pointer transition-all ${
@@ -755,7 +927,7 @@ const OptionsEditor = ({ options, onChange }) => {
   useEffect(() => {
     const filteredOptions = optionsList.filter(option => option.trim());
     onChange(filteredOptions);
-  }, [optionsList, onChange]);
+  }, [optionsList]); // Remove onChange from dependencies to prevent infinite loop
 
   const updateOption = (index, value) => {
     const newOptions = [...optionsList];

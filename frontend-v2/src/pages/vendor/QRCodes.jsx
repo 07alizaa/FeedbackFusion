@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import QRCode from 'qrcode.react';
 import { toast } from 'react-hot-toast';
 import {
   QrCodeIcon,
@@ -8,10 +7,10 @@ import {
   EyeIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Badge from '../ui/Badge';
-import LoadingSpinner from '../ui/Loading';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import LoadingSpinner from '../../components/ui/Loading';
 import { qrAPI, formsAPI } from '../../lib/api';
 import { copyToClipboard, downloadFile, generateFormUrl } from '../../lib/utils';
 
@@ -34,10 +33,18 @@ const QRCodes = () => {
       ]);
       
       setQrCodes(qrResponse.data.data || []);
-      setForms(formsResponse.data.data || []);
+      // Handle the correct API response structure for forms
+      const formsData = Array.isArray(formsResponse?.data?.data?.forms) 
+        ? formsResponse.data.data.forms 
+        : Array.isArray(formsResponse?.data?.data) 
+          ? formsResponse.data.data 
+          : [];
+      setForms(formsData);
     } catch (error) {
       toast.error('Failed to fetch QR codes');
       console.error('Error fetching QR codes:', error);
+      setQrCodes([]);
+      setForms([]);
     } finally {
       setLoading(false);
     }
@@ -62,7 +69,7 @@ const QRCodes = () => {
     try {
       await copyToClipboard(url);
       toast.success('URL copied to clipboard');
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy URL');
     }
   };
@@ -151,17 +158,16 @@ const QRCodes = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {qrCodes.map((qrCode) => {
-            const form = forms.find(f => f.id === qrCode.formId);
+          {qrCodes.map((qrCode, index) => {
             const formUrl = generateFormUrl(qrCode.formId);
 
             return (
-              <Card key={qrCode.id} className="hover:shadow-md transition-shadow">
+              <Card key={qrCode.formId || index} className="hover:shadow-md transition-shadow">
                 <Card.Header>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <Card.Title className="text-lg truncate">
-                        {form?.title || 'Unknown Form'}
+                        {qrCode.formTitle || 'Unknown Form'}
                       </Card.Title>
                       <Card.Description>
                         Form ID: {qrCode.formId}
@@ -178,12 +184,17 @@ const QRCodes = () => {
                     {/* QR Code Display */}
                     <div className="flex justify-center">
                       <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                        <QRCode
-                          value={formUrl}
-                          size={120}
-                          level="M"
-                          includeMargin={true}
-                        />
+                        {qrCode.qrCodeDataUrl ? (
+                          <img 
+                            src={qrCode.qrCodeDataUrl} 
+                            alt="QR Code" 
+                            className="w-[120px] h-[120px]"
+                          />
+                        ) : (
+                          <div className="w-[120px] h-[120px] bg-gray-100 flex items-center justify-center">
+                            <QrCodeIcon className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -191,7 +202,7 @@ const QRCodes = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Scans:</span>
-                        <span className="font-medium">{qrCode.scanCount || 0}</span>
+                        <span className="font-medium">{qrCode.viewCount || 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Created:</span>
@@ -199,11 +210,11 @@ const QRCodes = () => {
                           {new Date(qrCode.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      {qrCode.expiresAt && (
+                      {qrCode.expiryDate && (
                         <div className="flex justify-between">
                           <span className="text-gray-500">Expires:</span>
                           <span className="font-medium">
-                            {new Date(qrCode.expiresAt).toLocaleDateString()}
+                            {new Date(qrCode.expiryDate).toLocaleDateString()}
                           </span>
                         </div>
                       )}

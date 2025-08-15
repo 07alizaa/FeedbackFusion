@@ -42,6 +42,8 @@ const VendorLayout = () => {
       toast.success('Logged out successfully');
       navigate('/login');
     } catch (error) {
+      console.log('Logout error:', error);
+      toast.error('Failed to log out. Please try again.');
       // Even if logout API fails, clear local auth
       clearAuth();
       navigate('/login');

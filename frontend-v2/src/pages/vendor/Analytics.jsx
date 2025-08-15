@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { ChartBarIcon, UserGroupIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import Card from '../ui/Card';
-import LoadingSpinner from '../ui/Loading';
-import { formsAPI, aiAPI } from '../../lib/api';
-import { formatNumber, formatDate } from '../../lib/utils';
+import Card from '../../components/ui/Card';
+import LoadingSpinner from '../../components/ui/Loading';
+import { formsAPI } from '../../lib/api';
+import { formatNumber } from '../../lib/utils';
 
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
-  const [forms, setForms] = useState([]);
+  const [_forms, setForms] = useState([]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -22,11 +22,16 @@ const Analytics = () => {
         formsAPI.getVendorForms(),
       ]);
       
-      const formsData = formsResponse.data.data || [];
+      // Handle the correct API response structure
+      const formsData = Array.isArray(formsResponse?.data?.data?.forms) 
+        ? formsResponse.data.data.forms 
+        : Array.isArray(formsResponse?.data?.data) 
+          ? formsResponse.data.data 
+          : [];
       setForms(formsData);
       
       // Generate mock analytics data for demonstration
-      const totalResponses = formsData.reduce((sum, form) => sum + (form.responseCount || 0), 0);
+      const totalResponses = formsData.reduce((sum, form) => sum + (form.entryCount || form.responseCount || 0), 0);
       const avgRating = 4.2;
       const satisfactionRate = 78;
       

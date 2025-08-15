@@ -69,8 +69,26 @@ export function throttle(func, limit) {
 }
 
 export function getInitials(name) {
-  return name
-    .split(' ')
+  // Return empty string if input is missing, null, undefined, or not a string
+  if (!name || typeof name !== 'string') {
+    return '';
+  }
+  
+  // Trim extra spaces and split by space
+  const trimmedName = name.trim();
+  if (!trimmedName) {
+    return '';
+  }
+  
+  const nameParts = trimmedName.split(/\s+/);
+  
+  // Handle single-word names (e.g., "Alice" → "A")
+  if (nameParts.length === 1) {
+    return nameParts[0][0].toUpperCase();
+  }
+  
+  // Handle multi-word names (take first letter of each word)
+  return nameParts
     .map((n) => n[0])
     .join('')
     .toUpperCase();

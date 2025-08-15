@@ -16,7 +16,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 
 const LandingPage = () => {
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [_isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const features = [
     {

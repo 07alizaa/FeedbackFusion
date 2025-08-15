@@ -1,27 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   MagnifyingGlassIcon,
   EyeIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ExclamationCircleIcon,
   BuildingStorefrontIcon,
   EnvelopeIcon,
   PhoneIcon,
   GlobeAltIcon,
   DocumentTextIcon,
   CalendarDaysIcon,
-  UserIcon,
   FunnelIcon,
   ChartBarIcon,
   CreditCardIcon,
 } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import { Input } from '../ui/Input';
-import Badge from '../ui/Badge';
-import LoadingSpinner from '../ui/Loading';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
+import LoadingSpinner from '../../components/ui/Loading';
 import { adminAPI } from '../../lib/api';
+
+// Helper functions moved outside components to be accessible everywhere
+const getStatusBadge = (status) => {
+  switch (status) {
+    case 'approved':
+      return <Badge status="success">Approved</Badge>;
+    case 'pending':
+      return <Badge status="warning">Pending</Badge>;
+    case 'rejected':
+      return <Badge status="danger">Rejected</Badge>;
+    case 'suspended':
+      return <Badge status="danger">Suspended</Badge>;
+    default:
+      return <Badge>Unknown</Badge>;
+  }
+};
+
+const getSubscriptionBadge = (subscription) => {
+  switch (subscription) {
+    case 'starter':
+      return <Badge>Starter</Badge>;
+    case 'professional':
+      return <Badge status="primary">Professional</Badge>;
+    case 'enterprise':
+      return <Badge status="success">Enterprise</Badge>;
+    default:
+      return <Badge>Unknown</Badge>;
+  }
+};
 
 const BusinessManagement = () => {
   const [businesses, setBusinesses] = useState([]);
@@ -32,133 +59,7 @@ const BusinessManagement = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  useEffect(() => {
-    fetchBusinesses();
-  }, []);
-
-  useEffect(() => {
-    filterBusinesses();
-  }, [businesses, searchTerm, statusFilter]);
-
-  const fetchBusinesses = async () => {
-    try {
-      setLoading(true);
-      const response = await adminAPI.getBusinesses();
-      const businessData = response.data.data || getMockBusinesses();
-      setBusinesses(businessData);
-    } catch (error) {
-      console.error('Error fetching businesses:', error);
-      // Load mock data on error
-      setBusinesses(getMockBusinesses());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getMockBusinesses = () => [
-    {
-      id: 1,
-      businessName: 'TechCorp Solutions',
-      ownerName: 'John Smith',
-      email: 'john@techcorp.com',
-      phone: '+1-555-0123',
-      website: 'https://techcorp.com',
-      description: 'Software development and IT consulting services',
-      status: 'approved',
-      submittedAt: '2024-01-10T10:30:00Z',
-      approvedAt: '2024-01-11T14:20:00Z',
-      formsCount: 25,
-      responsesCount: 1250,
-      documents: [
-        { name: 'business_license.pdf', url: '#', uploadedAt: '2024-01-10T10:30:00Z' },
-        { name: 'tax_certificate.pdf', url: '#', uploadedAt: '2024-01-10T10:31:00Z' },
-      ],
-      subscription: 'professional',
-      lastActive: '2024-01-15T09:45:00Z',
-    },
-    {
-      id: 2,
-      businessName: 'NextGen Solutions',
-      ownerName: 'Michael Johnson',
-      email: 'michael@nextgen.com',
-      phone: '+1-555-0456',
-      website: 'https://nextgen.com',
-      description: 'Software development and consulting services',
-      status: 'pending',
-      submittedAt: '2024-01-14T15:30:00Z',
-      formsCount: 0,
-      responsesCount: 0,
-      documents: [
-        { name: 'business_license.pdf', url: '#', uploadedAt: '2024-01-14T15:30:00Z' },
-        { name: 'tax_certificate.pdf', url: '#', uploadedAt: '2024-01-14T15:31:00Z' },
-      ],
-      subscription: 'starter',
-      lastActive: null,
-    },
-    {
-      id: 3,
-      businessName: 'Digital Dynamics',
-      ownerName: 'Sarah Williams',
-      email: 'sarah@digitaldynamics.com',
-      phone: '+1-555-0789',
-      website: 'https://digitaldynamics.com',
-      description: 'Digital marketing and web development agency',
-      status: 'approved',
-      submittedAt: '2024-01-08T11:15:00Z',
-      approvedAt: '2024-01-09T16:30:00Z',
-      formsCount: 18,
-      responsesCount: 890,
-      documents: [
-        { name: 'business_license.pdf', url: '#', uploadedAt: '2024-01-08T11:15:00Z' },
-      ],
-      subscription: 'professional',
-      lastActive: '2024-01-14T16:20:00Z',
-    },
-    {
-      id: 4,
-      businessName: 'Green Earth Consultancy',
-      ownerName: 'David Chen',
-      email: 'david@greenearth.com',
-      phone: '+1-555-0012',
-      website: 'https://greenearth.com',
-      description: 'Environmental consulting and sustainability services',
-      status: 'rejected',
-      submittedAt: '2024-01-12T09:45:00Z',
-      rejectedAt: '2024-01-13T10:15:00Z',
-      rejectionReason: 'Incomplete documentation',
-      formsCount: 0,
-      responsesCount: 0,
-      documents: [
-        { name: 'business_license.pdf', url: '#', uploadedAt: '2024-01-12T09:45:00Z' },
-      ],
-      subscription: 'starter',
-      lastActive: null,
-    },
-    {
-      id: 5,
-      businessName: 'Innovation Labs',
-      ownerName: 'Emily Rodriguez',
-      email: 'emily@innovationlabs.com',
-      phone: '+1-555-0345',
-      website: 'https://innovationlabs.com',
-      description: 'Research and development in emerging technologies',
-      status: 'suspended',
-      submittedAt: '2024-01-05T14:20:00Z',
-      approvedAt: '2024-01-06T11:30:00Z',
-      suspendedAt: '2024-01-14T13:45:00Z',
-      suspensionReason: 'Terms of service violation',
-      formsCount: 12,
-      responsesCount: 560,
-      documents: [
-        { name: 'business_license.pdf', url: '#', uploadedAt: '2024-01-05T14:20:00Z' },
-        { name: 'research_permit.pdf', url: '#', uploadedAt: '2024-01-05T14:21:00Z' },
-      ],
-      subscription: 'enterprise',
-      lastActive: '2024-01-14T12:30:00Z',
-    },
-  ];
-
-  const filterBusinesses = () => {
+  const filterBusinesses = useCallback(() => {
     let filtered = [...businesses];
 
     // Apply search filter
@@ -176,6 +77,29 @@ const BusinessManagement = () => {
     }
 
     setFilteredBusinesses(filtered);
+  }, [businesses, searchTerm, statusFilter]);
+
+  useEffect(() => {
+    fetchBusinesses();
+  }, []);
+
+  useEffect(() => {
+    filterBusinesses();
+  }, [filterBusinesses]);
+
+  const fetchBusinesses = async () => {
+    try {
+      setLoading(true);
+      const response = await adminAPI.getBusinesses();
+      const businessData = response.data.data || [];
+      setBusinesses(businessData);
+    } catch (error) {
+      console.error('Error fetching businesses:', error);
+      // Show empty array on error instead of mock data
+      setBusinesses([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAction = async (businessId, action, reason = null) => {
@@ -206,34 +130,6 @@ const BusinessManagement = () => {
       console.error(`Error ${action}ing business:`, error);
     } finally {
       setActionLoading(null);
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'approved':
-        return <Badge status="success">Approved</Badge>;
-      case 'pending':
-        return <Badge status="warning">Pending</Badge>;
-      case 'rejected':
-        return <Badge status="danger">Rejected</Badge>;
-      case 'suspended':
-        return <Badge status="danger">Suspended</Badge>;
-      default:
-        return <Badge>Unknown</Badge>;
-    }
-  };
-
-  const getSubscriptionBadge = (subscription) => {
-    switch (subscription) {
-      case 'starter':
-        return <Badge>Starter</Badge>;
-      case 'professional':
-        return <Badge status="primary">Professional</Badge>;
-      case 'enterprise':
-        return <Badge status="success">Enterprise</Badge>;
-      default:
-        return <Badge>Unknown</Badge>;
     }
   };
 
@@ -316,7 +212,7 @@ const BusinessManagement = () => {
                 
                 <div className="flex items-center text-sm text-gray-600">
                   <PhoneIcon className="h-4 w-4 mr-2" />
-                  {business.phone}
+                  {business.phone || 'Not provided'}
                 </div>
 
                 {business.website && (
@@ -334,15 +230,15 @@ const BusinessManagement = () => {
                 )}
 
                 <p className="text-sm text-gray-700 line-clamp-2">
-                  {business.description}
+                  {business.description || 'No description provided'}
                 </p>
 
                 <div className="flex justify-between items-center pt-2">
                   <div className="flex space-x-4 text-xs text-gray-500">
-                    <span>{business.formsCount} forms</span>
-                    <span>{business.responsesCount} responses</span>
+                    <span>{business.formsCount || 0} forms</span>
+                    <span>{business.responsesCount || 0} responses</span>
                   </div>
-                  {getSubscriptionBadge(business.subscription)}
+                  {getSubscriptionBadge(business.subscription || 'starter')}
                 </div>
 
                 <div className="text-xs text-gray-500">
@@ -492,7 +388,7 @@ const BusinessDetailModal = ({ business, onClose, onAction, actionLoading }) => 
                 </div>
                 <div className="flex items-center">
                   <PhoneIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <span className="text-gray-700">{business.phone}</span>
+                  <span className="text-gray-700">{business.phone || 'Not provided'}</span>
                 </div>
                 {business.website && (
                   <div className="flex items-center">
@@ -515,15 +411,15 @@ const BusinessDetailModal = ({ business, onClose, onAction, actionLoading }) => 
               <div className="space-y-3">
                 <div className="flex items-center">
                   <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <span className="text-gray-700">{business.formsCount} forms created</span>
+                  <span className="text-gray-700">{business.formsCount || 0} forms created</span>
                 </div>
                 <div className="flex items-center">
                   <ChartBarIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  <span className="text-gray-700">{business.responsesCount} total responses</span>
+                  <span className="text-gray-700">{business.responsesCount || 0} total responses</span>
                 </div>
                 <div className="flex items-center">
                   <CreditCardIcon className="h-5 w-5 text-gray-400 mr-3" />
-                  {getSubscriptionBadge(business.subscription)}
+                  {getSubscriptionBadge(business.subscription || 'starter')}
                 </div>
               </div>
             </div>
@@ -532,24 +428,31 @@ const BusinessDetailModal = ({ business, onClose, onAction, actionLoading }) => 
           {/* Description */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-3">Description</h3>
-            <p className="text-gray-700">{business.description}</p>
+            <p className="text-gray-700">{business.description || 'No description provided'}</p>
           </div>
 
           {/* Documents */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-3">Documents</h3>
             <div className="space-y-2">
-              {business.documents.map((doc, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center">
-                    <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <span className="text-gray-700">{doc.name}</span>
+              {business.documents && business.documents.length > 0 ? (
+                business.documents.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div className="flex items-center">
+                      <DocumentTextIcon className="h-5 w-5 text-gray-400 mr-3" />
+                      <span className="text-gray-700">{doc.name}</span>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      View
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View
-                  </Button>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <DocumentTextIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p>No documents uploaded</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 

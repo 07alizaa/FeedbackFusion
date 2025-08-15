@@ -22,7 +22,6 @@ export default defineConfig({
           ui: ['@headlessui/react', '@heroicons/react'],
           charts: ['recharts'],
           forms: ['react-hook-form'],
-          stripe: ['@stripe/stripe-js', '@stripe/react-stripe-js'],
         },
       },
     },

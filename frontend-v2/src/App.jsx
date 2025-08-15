@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 
 // Layouts
 import VendorLayout from './components/layout/VendorLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoadingSpinner from './components/ui/Loading';
+import useAuthStore from './stores/authStore';
 
 // Public Pages
 const LandingPage = lazy(() => import('./pages/public/LandingPage'));
@@ -29,6 +30,7 @@ const FormBuilder = lazy(() => import('./pages/vendor/FormBuilder'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const BusinessManagement = lazy(() => import('./pages/admin/BusinessManagement'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 
@@ -43,6 +45,11 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const initAuth = useAuthStore((state) => state.initAuth);
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
@@ -51,14 +58,29 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              <Route 
+                path="/login" 
+                element={
+                  <ProtectedRoute requireAuth={false}>
+                    <Login />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/signup" 
+                element={
+                  <ProtectedRoute requireAuth={false}>
+                    <Signup />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/form/:businessId/:formId" element={<PublicForm />} />
+              <Route path="/form/:formId" element={<PublicForm />} />
               <Route path="/business/:businessId" element={<BusinessProfile />} />
 
               {/* Vendor Routes */}
               <Route
-                path="/vendor"
+                path="/dashboard"
                 element={
                   <ProtectedRoute requiredRole="vendor">
                     <VendorLayout />
@@ -66,15 +88,82 @@ function App() {
                 }
               >
                 <Route index element={<Dashboard />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="forms" element={<Forms />} />
-                <Route path="forms/builder" element={<FormBuilder />} />
-                <Route path="forms/builder/:formId" element={<FormBuilder />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="subscription" element={<Subscription />} />
-                <Route path="qr-codes" element={<QRCodes />} />
               </Route>
+              <Route
+                path="/forms"
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <VendorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Forms />} />
+                <Route path="new" element={<FormBuilder />} />
+                <Route path="builder" element={<FormBuilder />} />
+                <Route path="builder/:formId" element={<FormBuilder />} />
+                <Route path="edit/:formId" element={<FormBuilder />} />
+              </Route>
+              <Route
+                path="/form-builder"
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <VendorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<FormBuilder />} />
+                <Route path=":formId" element={<FormBuilder />} />
+              </Route>
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <VendorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Analytics />} />
+              </Route>
+              <Route
+                path="/qr-codes"
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <VendorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<QRCodes />} />
+              </Route>
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <VendorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Profile />} />
+              </Route>
+              <Route
+                path="/subscription"
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <VendorLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Subscription />} />
+              </Route>
+
+              {/* Vendor fallback route */}
+              <Route 
+                path="/vendor/*" 
+                element={
+                  <ProtectedRoute requiredRole="vendor">
+                    <Navigate to="/dashboard" replace />
+                  </ProtectedRoute>
+                } 
+              />
 
               {/* Admin Routes */}
               <Route
@@ -87,6 +176,7 @@ function App() {
               >
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="businesses" element={<BusinessManagement />} />
                 <Route path="users" element={<UserManagement />} />
               </Route>

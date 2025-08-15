@@ -43,7 +43,7 @@ const AdminLayout = () => {
       clearAuth();
       toast.success('Logged out successfully');
       navigate('/login');
-    } catch (error) {
+    } catch {
       clearAuth();
       navigate('/login');
     }

@@ -8,10 +8,10 @@ import {
   ArrowTrendingUpIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Badge from '../ui/Badge';
-import LoadingSpinner from '../ui/Loading';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import LoadingSpinner from '../../components/ui/Loading';
 import { formsAPI } from '../../lib/api';
 import { formatNumber, formatDate } from '../../lib/utils';
 
@@ -28,12 +28,20 @@ const Dashboard = () => {
           formsAPI.getVendorForms(),
         ]);
         
-        setForms(formsResponse.data.data || []);
+        // Handle the correct API response structure
+        // API returns: { success: true, data: { forms: [...], totalForms: 5 } }
+        const formsData = Array.isArray(formsResponse?.data?.data?.forms) 
+          ? formsResponse.data.data.forms 
+          : Array.isArray(formsResponse?.data?.data) 
+            ? formsResponse.data.data 
+            : [];
+        
+        setForms(formsData);
         
         // Calculate basic stats from forms
-        const totalForms = formsResponse.data.data?.length || 0;
-        const activeForms = formsResponse.data.data?.filter(form => form.isActive)?.length || 0;
-        const totalResponses = formsResponse.data.data?.reduce((sum, form) => sum + (form.responseCount || 0), 0) || 0;
+        const totalForms = formsData.length;
+        const activeForms = formsData.filter(form => form.isActive || form.is_active).length;
+        const totalResponses = formsData.reduce((sum, form) => sum + (form.entryCount || form.responses_count || form.responseCount || 0), 0);
         
         setStats({
           totalForms,
@@ -43,6 +51,14 @@ const Dashboard = () => {
         });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // Set empty state on error
+        setForms([]);
+        setStats({
+          totalForms: 0,
+          activeForms: 0,
+          totalResponses: 0,
+          responseRate: 0,
+        });
       } finally {
         setLoading(false);
       }
@@ -55,7 +71,9 @@ const Dashboard = () => {
     return <LoadingSpinner.Page />;
   }
 
-  const recentForms = forms.slice(0, 5);
+  // Ensure forms is always an array before using array methods
+  const safeFormsArray = Array.isArray(forms) ? forms : [];
+  const recentForms = safeFormsArray.slice(0, 5);
 
   return (
     <div className="space-y-6">

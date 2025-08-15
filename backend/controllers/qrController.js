@@ -11,29 +11,48 @@ const generateQRCode = async (req, res) => {
         const userId = req.user.userId;
         const options = req.body || {};
 
+        console.log('🔍 QR Controller - generateQRCode called');
+        console.log('📝 Form ID:', formId);
+        console.log('👤 User ID:', userId);
+        console.log('⚙️ Options:', JSON.stringify(options, null, 2));
+
         // Verify form ownership
+        console.log('🔍 Verifying form ownership...');
         const formResult = await pool.query(
             'SELECT * FROM feedback_forms WHERE id = $1 AND user_id = $2',
             [formId, userId]
         );
 
+        console.log('📊 Form query result:', formResult.rows.length, 'rows found');
+        if (formResult.rows.length > 0) {
+            console.log('📋 Form details:', JSON.stringify(formResult.rows[0], null, 2));
+        }
+
         if (formResult.rows.length === 0) {
+            console.log('❌ Form not found or access denied');
             return res.status(404).json({ 
                 success: false, 
                 message: 'Form not found or access denied' 
             });
         }
 
+        console.log('✅ Form ownership verified, calling QR service...');
         const qrCode = await qrService.generateFormQRCode(parseInt(formId), options);
+        console.log('✅ QR code generated successfully:', JSON.stringify(qrCode, null, 2));
 
         res.json({
             success: true,
             message: 'QR code generated successfully',
-            qrCode: qrCode
+            data: {
+                qrCodeData: qrCode.qrCodeDataUrl,
+                formId: formId,
+                qrCode: qrCode
+            }
         });
 
     } catch (error) {
-        console.error('Error generating QR code:', error);
+        console.error('❌ Error generating QR code:', error);
+        console.error('❌ Error stack:', error.stack);
         res.status(500).json({ 
             success: false, 
             message: error.message || 'Failed to generate QR code' 

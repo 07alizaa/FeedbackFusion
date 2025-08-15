@@ -9,10 +9,10 @@ import {
   PhoneIcon,
   GlobeAltIcon,
 } from '@heroicons/react/24/outline';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Badge from '../ui/Badge';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
 import { authAPI, businessAPI } from '../../lib/api';
 import useAuthStore from '../../stores/authStore';
 

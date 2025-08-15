@@ -29,10 +29,10 @@ const Signup = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const { confirmPassword, ...signupData } = data;
+      const { confirmPassword: _confirmPassword, ...signupData } = data;
       await authAPI.signup(signupData);
       
-      toast.success('Account created successfully! Please sign in.');
+      toast.success('Business account created successfully! Your account is pending admin approval. You will be notified once approved.');
       navigate('/login');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Signup failed');
@@ -47,15 +47,18 @@ const Signup = () => {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">FeedbackFusion</h1>
           <h2 className="mt-6 text-2xl font-semibold text-gray-900">
-            Create your account
+            Create your business account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Or{' '}
+            Join FeedbackFusion to collect and manage customer feedback
+          </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Already have an account?{' '}
             <Link
               to="/login"
               className="font-medium text-primary-600 hover:text-primary-500"
             >
-              sign in to your existing account
+              Sign in here
             </Link>
           </p>
         </div>
@@ -93,29 +96,18 @@ const Signup = () => {
             />
 
             <Input
-              label="Business Name (Optional)"
+              label="Business Name"
               type="text"
               autoComplete="organization"
               placeholder="Enter your business name"
               error={errors.businessName?.message}
-              {...register('businessName')}
+              {...register('businessName', {
+                required: 'Business name is required'
+              })}
             />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Account Type
-              </label>
-              <select
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                {...register('role', { required: 'Please select account type' })}
-              >
-                <option value="vendor">Business Owner / Vendor</option>
-                <option value="admin">Administrator</option>
-              </select>
-              {errors.role && (
-                <p className="mt-1 text-sm text-danger-600">{errors.role.message}</p>
-              )}
-            </div>
+            {/* Hidden field - all signups are vendors */}
+            <input type="hidden" {...register('role')} value="vendor" />
 
             <Input
               label="Password"
@@ -207,11 +199,17 @@ const Signup = () => {
             loading={isLoading}
             disabled={isLoading}
           >
-            Create Account
+            Create Business Account
           </Button>
         </form>
 
         <div className="text-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+              <strong>For Business Owners:</strong> Create your account to start collecting customer feedback. 
+              Your account will be reviewed and approved by our admin team.
+            </p>
+          </div>
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <Link

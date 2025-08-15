@@ -24,9 +24,15 @@ const ProtectedRoute = ({ children, requiredRole = null, requireAuth = true }) =
   }
 
   // If user is authenticated but trying to access auth pages
+  // Allow bypass with ?force=true for testing
   if (!requireAuth && isAuthenticated) {
-    const redirectPath = user?.role === 'admin' ? '/admin' : '/dashboard';
-    return <Navigate to={redirectPath} replace />;
+    const searchParams = new URLSearchParams(location.search);
+    const forceAccess = searchParams.get('force') === 'true';
+    
+    if (!forceAccess) {
+      const redirectPath = user?.role === 'admin' ? '/admin' : '/dashboard';
+      return <Navigate to={redirectPath} replace />;
+    }
   }
 
   return children;
