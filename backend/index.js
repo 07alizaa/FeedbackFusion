@@ -4,6 +4,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { Pool } = require('pg');
 
+// Load environment variables
+require('dotenv').config();
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const formRoutes = require('./routes/formRoutes');
@@ -22,7 +25,7 @@ const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'feedbackfusion',
-  password: 'password%401111',
+  password: 'password@1111',
   port: 5432,
 });
 
