@@ -65,6 +65,10 @@ DEVELOPMENT_NOTES.md
 INTERNAL_*.md
 *_GUIDE.md
 
+# Security and Admin setup files (should not be committed)
+ADMIN_SETUP_COMPLETE.md
+SECURITY_SETUP.md
+
 # Package manager lockfiles (optional - you may want to commit these)
 # package-lock.json
 # yarn.lock
