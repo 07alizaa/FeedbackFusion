@@ -6,6 +6,7 @@ import { lazy, Suspense, useEffect } from 'react';
 // Layouts
 import VendorLayout from './components/layout/VendorLayout';
 import AdminLayout from './components/layout/AdminLayout';
+import AuthLayout from './components/layout/AuthLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoadingSpinner from './components/ui/Loading';
 import useAuthStore from './stores/authStore';
@@ -62,7 +63,9 @@ function App() {
                 path="/login" 
                 element={
                   <ProtectedRoute requireAuth={false}>
-                    <Login />
+                    <AuthLayout>
+                      <Login />
+                    </AuthLayout>
                   </ProtectedRoute>
                 } 
               />
@@ -70,7 +73,9 @@ function App() {
                 path="/signup" 
                 element={
                   <ProtectedRoute requireAuth={false}>
-                    <Signup />
+                    <AuthLayout>
+                      <Signup />
+                    </AuthLayout>
                   </ProtectedRoute>
                 } 
               />
